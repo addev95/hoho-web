@@ -1,0 +1,443 @@
+:root {
+  --accent: #ff8c42;
+  --accent-dark: #e56f1f;
+  --bg: #f6f6f8;
+  --card: #ffffff;
+  --text: #1c1c1e;
+  --text-secondary: #6b6b70;
+  --border: #e5e5ea;
+  --chip-bg: #efeff4;
+  --danger: #ff3b30;
+  --success: #34c759;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+#root {
+  max-width: 640px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--bg);
+  padding-bottom: 76px; /* 탭바 공간 */
+}
+
+/* ── 탭바 ── */
+.tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  z-index: 50;
+}
+.tabbar button {
+  flex: 1;
+  border: none;
+  background: none;
+  padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
+  font-size: 11px;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+}
+.tabbar button.active {
+  color: var(--accent-dark);
+  font-weight: 600;
+}
+.tabbar .tab-icon {
+  font-size: 22px;
+}
+
+/* ── 헤더 ── */
+.page-header {
+  position: sticky;
+  top: 0;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 16px;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.page-header h1 {
+  margin: 0;
+  font-size: 18px;
+}
+.icon-btn {
+  border: none;
+  background: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 6px;
+  color: var(--text);
+}
+
+/* ── 진행 바 ── */
+.progress-wrap {
+  padding: 8px 16px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+.progress-track {
+  height: 4px;
+  background: var(--chip-bg);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s;
+}
+.progress-msg {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* ── 목적지 바 ── */
+.dest-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+.dest-bar .dest-name {
+  font-weight: 600;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dest-bar button {
+  border: 1px solid var(--border);
+  background: var(--chip-bg);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* ── 세그먼트 탭 ── */
+.segment {
+  display: flex;
+  background: var(--chip-bg);
+  border-radius: 10px;
+  margin: 12px 16px 0;
+  padding: 3px;
+}
+.segment button {
+  flex: 1;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+.segment button.active {
+  background: var(--card);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* ── 칩 ── */
+.chip-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 10px 16px;
+  scrollbar-width: none;
+}
+.chip-row::-webkit-scrollbar {
+  display: none;
+}
+.chip {
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 16px;
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+.chip.active {
+  background: var(--text);
+  color: #fff;
+  border-color: var(--text);
+}
+
+/* ── 공고 카드 ── */
+.job-list {
+  padding: 4px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.job-card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+}
+.job-card .job-loc {
+  font-size: 12px;
+  color: var(--accent-dark);
+  font-weight: 600;
+}
+.job-card .job-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 4px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.job-card .job-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 6px 0;
+}
+.job-card .job-meta .wage {
+  color: var(--text);
+  font-weight: 600;
+}
+.job-card .commute-box {
+  background: #f0f9f0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  margin: 8px 0;
+}
+.job-card .commute-box.bad {
+  background: #fff4f0;
+}
+.job-card .job-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.btn {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+}
+.btn-secondary {
+  background: var(--chip-bg);
+  color: var(--text);
+}
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--accent-dark);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 6px 0;
+}
+
+/* ── 빈 상태 / 온보딩 ── */
+.empty-state, .onboarding {
+  text-align: center;
+  padding: 60px 32px;
+}
+.empty-state .big-icon, .onboarding .big-icon {
+  font-size: 52px;
+}
+.empty-state h2, .onboarding h2 {
+  margin: 16px 0 8px;
+}
+.empty-state p, .onboarding p {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+.onboarding .key-option {
+  text-align: left;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin: 10px 0;
+  font-size: 14px;
+}
+.text-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 15px;
+  margin: 8px 0;
+}
+.text-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* ── 시트 (모달) ── */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.sheet {
+  background: var(--card);
+  width: 100%;
+  max-width: 640px;
+  max-height: 80vh;
+  overflow-y: auto;
+  border-radius: 16px 16px 0 0;
+  padding: 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+}
+.sheet h2 {
+  margin: 0 0 12px;
+  font-size: 17px;
+}
+.sheet .preset-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--border);
+  font-size: 15px;
+  cursor: pointer;
+}
+.badge-server {
+  font-size: 11px;
+  background: #e8f5e9;
+  color: #2e7d32;
+  border-radius: 6px;
+  padding: 2px 8px;
+  margin-left: 8px;
+}
+
+/* ── 설정 ── */
+.settings-group {
+  background: var(--card);
+  border-radius: 12px;
+  margin: 12px 16px;
+  padding: 4px 16px;
+  border: 1px solid var(--border);
+}
+.settings-group h3 {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 12px 0 4px;
+  font-weight: 600;
+}
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 15px;
+}
+.setting-row:last-child {
+  border-bottom: none;
+}
+.setting-row input[type='number'] {
+  width: 80px;
+  text-align: right;
+}
+.notice-box {
+  margin: 12px 16px;
+  padding: 12px 14px;
+  background: #fff8e1;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #7a5c00;
+}
+
+/* ── 시간표 ── */
+.timetable-grid {
+  display: grid;
+  grid-template-columns: 44px repeat(7, 1fr);
+  margin: 12px 8px;
+  font-size: 11px;
+  position: relative;
+}
+.timetable-grid .th {
+  text-align: center;
+  font-weight: 600;
+  padding: 6px 0;
+  color: var(--text-secondary);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+}
+.timetable-grid .hour-label {
+  text-align: right;
+  padding-right: 6px;
+  color: var(--text-secondary);
+  height: 40px;
+}
+.timetable-grid .cell {
+  border-top: 1px solid var(--border);
+  height: 40px;
+  position: relative;
+}
+.tt-block {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 10px;
+  padding: 2px 4px;
+  overflow: hidden;
+  z-index: 2;
+}
+
+/* ── 에러 ── */
+.error-box {
+  margin: 12px 16px;
+  padding: 12px 14px;
+  background: #fdecea;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #8f1d16;
+}
