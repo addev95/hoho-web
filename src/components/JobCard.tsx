@@ -53,15 +53,18 @@ export default function JobCard({ job, onToggleSchedule }: Props) {
             const oc = job.geocodedCoord;
             const dc = commute.destCoord;
             const fromName = extracted.studioName?.value?.trim() || post.region;
+            // by/traffic: 대중교통 탭 고정. from은 장소 ID 우선 (없으면 상호명+좌표)
+            const toSeg = dc && commute.destination
+              ? `${encodeURIComponent(commute.destination)},${dc.y},${dc.x}`
+              : null;
             let mapUrl = commute.landingUrl;
-            // from은 장소 ID 우선 (정확한 장소 지정), 없으면 상호명+좌표
-            const fromSeg = job.kakaoPlaceId
-              ? job.kakaoPlaceId
-              : (oc && fromName ? `${encodeURIComponent(fromName)},${oc.y},${oc.x}` : null);
-            if (fromSeg && dc && commute.destination) {
-              mapUrl = `https://map.kakao.com/link/from/${fromSeg}/to/${encodeURIComponent(commute.destination)},${dc.y},${dc.x}`;
-            } else if (oc && dc && fromName && commute.destination) {
-              mapUrl = `https://map.kakao.com/link/from/${encodeURIComponent(fromName)},${oc.y},${oc.x}/to/${encodeURIComponent(commute.destination)},${dc.y},${dc.x}`;
+            if (toSeg) {
+              const fromSeg = job.kakaoPlaceId
+                ? job.kakaoPlaceId
+                : (oc && fromName ? `${encodeURIComponent(fromName)},${oc.y},${oc.x}` : null);
+              if (fromSeg) {
+                mapUrl = `https://map.kakao.com/link/by/traffic/${fromSeg}/${toSeg}`;
+              }
             }
             return mapUrl ? (
               <>
