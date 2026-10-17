@@ -213,6 +213,7 @@ body {
 .sigungu-chips {
   padding: 4px 0;
   flex: 1;
+  min-width: 0; /* flex 자식에서 가로 스크롤이 동작하려면 필요 */
 }
 .chip-sm {
   padding: 4px 10px;
@@ -281,6 +282,22 @@ body {
 .mchip-schedule {
   background: rgba(90, 200, 250, 0.14);
   color: #0a7a8c;
+}
+/* 파싱된 시간표 항목 (Swift 스케줄 미리보기 패리티) */
+.schedule-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 2px 0 6px;
+}
+.schedule-line {
+  font-size: 12px;
+  font-weight: 600;
+  color: #0a7a8c;
+}
+.schedule-line.more {
+  color: var(--text-secondary);
+  font-weight: 400;
 }
 .job-card .commute-box {
   background: #f0f9f0;
