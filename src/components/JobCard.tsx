@@ -58,14 +58,29 @@ export default function JobCard({ job, onToggleSchedule }: Props) {
               mapUrl = `https://map.kakao.com/link/from/${encodeURIComponent(fromName)},${oc.y},${oc.x}/to/${encodeURIComponent(commute.destination)},${dc.y},${dc.x}`;
             }
             return mapUrl ? (
-              <a
-                href={mapUrl}
-                target="_blank"
-                rel="noreferrer"
-                style={{ fontSize: 12, color: '#0066ff', display: 'inline-block', marginTop: 4 }}
-              >
-                카카오맵에서 길찾기 열기 ↗
-              </a>
+              <>
+                <a
+                  href={mapUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ fontSize: 12, color: '#0066ff', display: 'inline-block', marginTop: 4 }}
+                >
+                  카카오맵에서 길찾기 열기 ↗
+                </a>
+                {job.kakaoPlaceId && (
+                  <>
+                    {' · '}
+                    <a
+                      href={`https://place.map.kakao.com/${job.kakaoPlaceId}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ fontSize: 12, color: '#0066ff', display: 'inline-block', marginTop: 4 }}
+                    >
+                      장소 보기 ↗
+                    </a>
+                  </>
+                )}
+              </>
             ) : null;
           })()}
         </div>

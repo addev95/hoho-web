@@ -175,7 +175,7 @@ function mapStoredPost(
     pick(stored.commute, boardDefault); // 레거시 단일 결과
   }
 
-  return { post, extracted, commute, isScheduled: false, geocodedCoord };
+  return { post, extracted, commute, isScheduled: false, geocodedCoord, kakaoPlaceId: stored.kakao_place_id ?? undefined };
 }
 
 /** 4개 게시판 병렬 조회 → 스냅샷 */

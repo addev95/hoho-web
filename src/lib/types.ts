@@ -49,6 +49,7 @@ export interface ServerStoredPost {
   status: string;
   first_seen?: number | null;
   last_seen?: number | null;
+  kakao_place_id?: string | null;
 }
 
 // ── 클라이언트 모델 (camelCase) ─────────────────────────
@@ -114,6 +115,8 @@ export interface MatchedJob {
   commute?: CommuteEvaluation;
   isScheduled: boolean;
   geocodedCoord?: Coordinate;
+  /** 카카오 장소 ID (place.map.kakao.com/{id} 링크용) */
+  kakaoPlaceId?: string;
 }
 
 export interface Snapshot {
