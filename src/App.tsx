@@ -10,7 +10,7 @@ import {
   isJobRegistered,
 } from './lib/store';
 import type { Settings } from './lib/store';
-import { dispatchCrawl, fetchSnapshot, waitForRunCompletion } from './lib/github';
+import { dispatchCrawl, fetchSnapshot, resolveDestination, waitForRunCompletion } from './lib/github';
 import Onboarding from './components/Onboarding';
 import JobFeed from './components/JobFeed';
 import DestinationSheet from './components/DestinationSheet';
@@ -71,15 +71,22 @@ export default function App() {
       const serverDest = s.destinationStation.trim();
       const items = loadTimetable();
       let snap = await fetchSnapshot(s.repo, s.pat, serverDest);
-      let activeDest = serverDest || snap.defaultDestination;
+      // "진접역" → "4호선 진접역" 같은 호선 접두어 차이는 기존 분석을 재사용
+      let resolved = resolveDestination(serverDest, snap.destinations);
+      if (resolved && resolved !== serverDest) {
+        snap = await fetchSnapshot(s.repo, s.pat, resolved);
+      }
+      let activeDest = resolved ?? serverDest ?? snap.defaultDestination;
 
-      if (serverDest && !snap.destinations.includes(serverDest)) {
+      if (serverDest && !resolved) {
         setProgressMsg(`"${serverDest}" 서버에서 분석 중... (최대 10분 소요)`);
         await dispatchCrawl(s.repo, s.pat, serverDest);
         const ok = await waitForRunCompletion(s.repo, s.pat);
         if (ok) {
           setProgressMsg('분석 완료! 다시 불러오는 중...');
           snap = await fetchSnapshot(s.repo, s.pat, serverDest);
+          resolved = resolveDestination(serverDest, snap.destinations);
+          activeDest = resolved ?? serverDest;
         } else {
           setError('서버 분석 시간 초과 — 기본 목적지 데이터로 표시합니다.');
           activeDest = snap.defaultDestination;
@@ -110,7 +117,9 @@ export default function App() {
       setDestSheetOpen(false);
       setError('');
       try {
-        if (!destinations.includes(destName)) {
+        // 호선 접두어 차이("진접역"→"4호선 진접역")는 기존 분석 재사용
+        const canonical = resolveDestination(destName, destinations) ?? destName;
+        if (!resolveDestination(destName, destinations)) {
           setProgressMsg(`"${destName}" 서버에서 분석 중... (최대 10분 소요)`);
           setLoading(true);
           await dispatchCrawl(s.repo, s.pat, destName);
@@ -123,10 +132,10 @@ export default function App() {
           }
         }
         const items = loadTimetable();
-        const snap = await fetchSnapshot(s.repo, s.pat, destName);
-        setActiveDestination(destName);
+        const snap = await fetchSnapshot(s.repo, s.pat, canonical);
+        setActiveDestination(canonical);
         applySnapshot(snap, items);
-        const ns = { ...s, destinationStation: destName };
+        const ns = { ...s, destinationStation: canonical };
         saveSettings(ns);
         setSettings(ns);
       } catch (e) {

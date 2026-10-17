@@ -178,6 +178,24 @@ function mapStoredPost(
   return { post, extracted, commute, isScheduled: false, geocodedCoord, kakaoPlaceId: stored.kakao_place_id ?? undefined };
 }
 
+/** "4호선 진접역" → "진접역" (호선 접두어 제거) */
+export function normalizeStationName(name: string): string {
+  return name.trim().replace(/^\d+호선\s*/, '');
+}
+
+/**
+ * 입력 목적지를 서버 분석済み 목록에서 찾는다.
+ * 정확히 일치하면 그대로, 호선 접두어만 다르면 canonical 이름을 반환.
+ * 없으면 null (신규 분석 필요).
+ */
+export function resolveDestination(input: string, destinations: string[]): string | null {
+  const t = input.trim();
+  if (!t) return null;
+  if (destinations.includes(t)) return t;
+  const nt = normalizeStationName(t);
+  return destinations.find((d) => normalizeStationName(d) === nt) ?? null;
+}
+
 /** 4개 게시판 병렬 조회 → 스냅샷 */
 export async function fetchSnapshot(
   repo: string,
