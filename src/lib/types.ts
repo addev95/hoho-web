@@ -128,6 +128,7 @@ export interface TimetableItem {
   originalJobUrl?: string;
   colorHex: string;
   mergedCount?: number; // 연속 슬롯 병합 시 합쳐진 타임 수 (표시용)
+  mergedSlotMinutes?: number; // 병합된 슬롯들이 모두 같은 분일 때 각 슬롯 분 (표시용)
 }
 
 export const BOARD_NAMES: Record<string, string> = {

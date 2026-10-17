@@ -99,10 +99,12 @@ function adjustHour(h: number, ampm: string | undefined): number {
 export function extractTimeSlots(text: string, defaultAmPm?: string): ParsedSlot[] {
   const slots: ParsedSlot[] = [];
 
-  // 0. 숫자 간 공백 정규화 및 쉼표 연강 확장
+  // 0. 숫자 간 공백 정규화 ('1 9 시 0 0 분' -> '19시 00분', '8시 10분' -> '8시10분')
+  //    및 쉼표 연강 확장 ('7,8시' -> '7시, 8시')
   const cleaned = text
     .replace(/(\d)\s+(?=\d)/g, '$1')
     .replace(/(\d)\s+(시|분)/g, '$1$2')
+    .replace(/시\s+(\d{1,2})\s*분/g, '시$1분')
     .replace(/(\d{1,2})\s*,\s*(\d{1,2})\s*시/g, '$1시, $2시');
 
   let contextAmPm = defaultAmPm;
@@ -197,11 +199,23 @@ export function parseScheduleCandidates(job: MatchedJob): TimetableItem[] {
   let candidates: TimetableItem[] = [];
 
   // 1단계: 청크/라인 단위 문맥 기반 파싱
-  const rawChunks = timetableText
+  // '|'와 줄바꿈은 강한 경계. '/'는 양쪽 모두에 시간이 있으면 별도 청크로 분리한다.
+  // ("월/수/금 19시"는 하나로 유지, "월,수 6시,7시 / 금 7시,8시"는 분리)
+  const hardChunks = timetableText
     .split('|')
     .flatMap((c) => c.split('\n'))
     .map((c) => c.trim())
     .filter((c) => c.length > 0);
+  const rawChunks: string[] = [];
+  for (const hc of hardChunks) {
+    const segs = hc
+      .split('/')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    const withSlots = segs.filter((s) => extractTimeSlots(s).length > 0).length;
+    if (segs.length > 1 && withSlots > 1) rawChunks.push(...segs);
+    else rawChunks.push(hc);
+  }
 
   const extractedFromTt = extractWeekdays(timetableText);
   const globalDays = extractedFromTt.length > 0 ? extractedFromTt : extractWeekdays(job.post.title);
@@ -254,30 +268,41 @@ export function parseScheduleCandidates(job: MatchedJob): TimetableItem[] {
   );
 
   // 4단계: 같은 요일의 연속/겹침 슬롯 병합
-  // (화 19:00~20:00 + 화 20:00~21:00 + 화 21:00~22:00 → 화 19:00~22:00 (3타임))
+  // (화 19:00~20:00 + 화 20:00~21:00 + 화 21:00~22:00 → 화 19:00~22:00 (3타임, 각 60분))
   const merged: TimetableItem[] = [];
+  const mergedMinutes: number[][] = []; // 병합 그룹별 각 슬롯 분
   for (const c of candidates) {
     const last = merged[merged.length - 1];
     const lastEnd = last ? last.endHour * 60 + last.endMinute : -1;
     const curStart = c.startHour * 60 + c.startMinute;
     const curEnd = c.endHour * 60 + c.endMinute;
+    const curMin = curEnd - curStart;
     if (last && last.weekday === c.weekday && curStart <= lastEnd) {
       if (curEnd > lastEnd) {
         last.endHour = Math.floor(curEnd / 60);
         last.endMinute = curEnd % 60;
       }
-      last.mergedCount = (last.mergedCount ?? 1) + (c.mergedCount ?? 1);
+      const mins = mergedMinutes[mergedMinutes.length - 1];
+      mins.push(curMin);
+      last.mergedCount = mins.length;
+      // 모든 슬롯이 같은 분이면 "각 n분" 표시
+      last.mergedSlotMinutes = mins.every((m) => m === mins[0]) ? mins[0] : undefined;
     } else {
       merged.push(c);
+      mergedMinutes.push([curMin]);
     }
   }
 
   return merged;
 }
 
-/** 후보를 "화 18:00~19:00" 형식 한 줄로 (병합된 경우 "(3타임)" 표기) */
+/** 후보를 "화 18:00~19:00" 형식 한 줄로 (병합된 경우 "(3타임, 각 60분)" 표기) */
 export function candidateLine(c: TimetableItem): string {
   const p = (n: number) => String(n).padStart(2, '0');
   const base = `${WEEKDAY_SHORT[c.weekday - 1]} ${p(c.startHour)}:${p(c.startMinute)}~${p(c.endHour)}:${p(c.endMinute)}`;
-  return c.mergedCount && c.mergedCount > 1 ? `${base} (${c.mergedCount}타임)` : base;
+  if (c.mergedCount && c.mergedCount > 1) {
+    const each = c.mergedSlotMinutes ? `, 각 ${c.mergedSlotMinutes}분` : '';
+    return `${base} (${c.mergedCount}타임${each})`;
+  }
+  return base;
 }
