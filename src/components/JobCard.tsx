@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import type { MatchedJob, TimetableItem } from '../lib/types';
 import { displayLocation, displaySchedule, displayWage, formatMinutes } from '../lib/format';
-import { candidateLine, parseScheduleCandidates } from '../lib/schedule';
+import { candidateLine, slotsToItems } from '../lib/schedule';
 import { BOARD_NAMES } from '../lib/types';
 
 interface Props {
@@ -11,20 +11,22 @@ interface Props {
 
 export default function JobCard({ job, onToggleSchedule }: Props) {
   const { post, extracted, commute, isScheduled } = job;
-  const loc = displayLocation(extracted.location?.value ?? post.region);
+  // 지역 표시는 동 단위 post.region 우선
+  const region = post.region?.trim() || displayLocation(extracted.location?.value);
+  const studio = extracted.studioName?.value?.trim();
   const wage = displayWage(extracted.wage?.value);
   const schedule = displaySchedule(extracted.timetable?.value);
-  // Swift parseScheduleCandidates 포팅: 공고 시간표를 요일별 항목으로 파싱
-  const candidates = useMemo(() => parseScheduleCandidates(job), [job]);
+  const candidates = useMemo(() => slotsToItems(job), [job]);
 
   return (
     <div className="job-card">
       <div className="job-loc">
-        {loc} · {BOARD_NAMES[post.boardMid] ?? post.boardMid}
+        📍 {region} · {BOARD_NAMES[post.boardMid] ?? post.boardMid}
       </div>
       <div className="job-title">{post.title}</div>
       <div className="job-meta">
         <span className="mchip mchip-wage">₩ {wage}</span>
+        {studio && <span className="studio-subtle">{studio}</span>}
         {candidates.length === 0 && <span className="mchip mchip-schedule">🕐 {schedule}</span>}
       </div>
       {candidates.length > 0 && (

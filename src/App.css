@@ -291,6 +291,11 @@ body {
   background: rgba(90, 200, 250, 0.14);
   color: #0a7a8c;
 }
+/* 상호명 (은은하게) */
+.studio-subtle {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
 /* 파싱된 시간표 항목 (Swift 스케줄 미리보기 패리티) */
 .schedule-lines {
   display: flex;

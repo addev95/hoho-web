@@ -77,6 +77,12 @@ export interface CommuteEvaluation {
   landingUrl?: string;
 }
 
+export interface TimetableSlot {
+  day: string; // "월"~"일" 1자
+  start: string; // "HH:MM" 24시간제
+  end: string; // "HH:MM" 24시간제
+}
+
 export interface ExtractedJobPosting {
   studioName?: ExtractedField;
   location?: ExtractedField;
@@ -85,6 +91,8 @@ export interface ExtractedJobPosting {
   timetable?: ExtractedField;
   classDuration?: ExtractedField;
   breakTime?: ExtractedField;
+  /** Gemini 구조화 시간표. undefined = 구 데이터(서버 백필 전) */
+  timetableSlots?: TimetableSlot[];
 }
 
 export interface BoardPost {

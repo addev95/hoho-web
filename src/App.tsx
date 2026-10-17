@@ -17,7 +17,7 @@ import DestinationSheet from './components/DestinationSheet';
 import Timetable from './components/Timetable';
 import SettingsView from './components/Settings';
 import { jobToTimetableSeed } from './components/JobCard';
-import { candidateLine, parseScheduleCandidates } from './lib/schedule';
+import { candidateLine, slotsToItems } from './lib/schedule';
 
 type Tab = 'feed' | 'timetable' | 'settings';
 
@@ -173,10 +173,9 @@ export default function App() {
     if (isJobRegistered(timetable, job.post.url)) {
       updateTimetable(timetable.filter((i) => i.originalJobUrl !== job.post.url));
     } else {
-      // Swift와 동일: 공고 시간표를 파싱해 여러 항목을 한 번에 등록
-      const candidates = parseScheduleCandidates(job);
+      // 구조화 슬롯 일괄 등록 (슬롯이 없으면 수동 입력 폼으로)
+      const candidates = slotsToItems(job);
       if (candidates.length === 0) {
-        // 파싱 실패 시 기존 동작: 수동 입력 폼으로
         setTimetableSeed(jobToTimetableSeed(job));
         setTab('timetable');
       } else {

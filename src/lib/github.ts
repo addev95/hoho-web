@@ -10,6 +10,7 @@ import type {
   ServerBoardState,
   ServerCommute,
   ServerStoredPost,
+  TimetableSlot,
   Snapshot,
 } from './types';
 
@@ -86,6 +87,24 @@ function toField(v: unknown): ExtractedField | undefined {
   return { value: t, rawLine: t, confidence: 1.0 };
 }
 
+function toTimetableSlots(v: unknown): TimetableSlot[] | undefined {
+  if (!Array.isArray(v)) return undefined;
+  const days = '월화수목금토일';
+  const out: TimetableSlot[] = [];
+  for (const s of v) {
+    if (typeof s !== 'object' || s === null) continue;
+    const o = s as Record<string, unknown>;
+    const day = typeof o['day'] === 'string' ? o['day'].trim() : '';
+    const start = typeof o['start'] === 'string' ? o['start'].trim() : '';
+    const end = typeof o['end'] === 'string' ? o['end'].trim() : '';
+    if (day.length !== 1 || !days.includes(day)) continue;
+    if (!/^\d{2}:\d{2}$/.test(start) || !/^\d{2}:\d{2}$/.test(end)) continue;
+    if (end <= start) continue;
+    out.push({ day, start, end });
+  }
+  return out;
+}
+
 function toExtracted(raw: Record<string, unknown> | null | undefined): ExtractedJobPosting {
   const r = raw ?? {};
   const contactRaw = (r['contact'] as Record<string, unknown> | undefined) ?? {};
@@ -100,6 +119,7 @@ function toExtracted(raw: Record<string, unknown> | null | undefined): Extracted
     timetable: toField(r['timetable']),
     classDuration: toField(r['class_duration']),
     breakTime: toField(r['break_time']),
+    timetableSlots: toTimetableSlots(r['timetable_slots']),
   };
 }
 
