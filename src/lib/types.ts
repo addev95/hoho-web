@@ -127,6 +127,7 @@ export interface TimetableItem {
   notes?: string;
   originalJobUrl?: string;
   colorHex: string;
+  mergedCount?: number; // 연속 슬롯 병합 시 합쳐진 타임 수 (표시용)
 }
 
 export const BOARD_NAMES: Record<string, string> = {

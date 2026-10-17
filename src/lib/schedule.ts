@@ -253,11 +253,31 @@ export function parseScheduleCandidates(job: MatchedJob): TimetableItem[] {
     (a, b) => a.weekday - b.weekday || a.startHour * 60 + a.startMinute - (b.startHour * 60 + b.startMinute),
   );
 
-  return candidates;
+  // 4단계: 같은 요일의 연속/겹침 슬롯 병합
+  // (화 19:00~20:00 + 화 20:00~21:00 + 화 21:00~22:00 → 화 19:00~22:00 (3타임))
+  const merged: TimetableItem[] = [];
+  for (const c of candidates) {
+    const last = merged[merged.length - 1];
+    const lastEnd = last ? last.endHour * 60 + last.endMinute : -1;
+    const curStart = c.startHour * 60 + c.startMinute;
+    const curEnd = c.endHour * 60 + c.endMinute;
+    if (last && last.weekday === c.weekday && curStart <= lastEnd) {
+      if (curEnd > lastEnd) {
+        last.endHour = Math.floor(curEnd / 60);
+        last.endMinute = curEnd % 60;
+      }
+      last.mergedCount = (last.mergedCount ?? 1) + (c.mergedCount ?? 1);
+    } else {
+      merged.push(c);
+    }
+  }
+
+  return merged;
 }
 
-/** 후보를 "화 18:00~19:00" 형식 한 줄로 */
+/** 후보를 "화 18:00~19:00" 형식 한 줄로 (병합된 경우 "(3타임)" 표기) */
 export function candidateLine(c: TimetableItem): string {
   const p = (n: number) => String(n).padStart(2, '0');
-  return `${WEEKDAY_SHORT[c.weekday - 1]} ${p(c.startHour)}:${p(c.startMinute)}~${p(c.endHour)}:${p(c.endMinute)}`;
+  const base = `${WEEKDAY_SHORT[c.weekday - 1]} ${p(c.startHour)}:${p(c.startMinute)}~${p(c.endHour)}:${p(c.endMinute)}`;
+  return c.mergedCount && c.mergedCount > 1 ? `${base} (${c.mergedCount}타임)` : base;
 }
