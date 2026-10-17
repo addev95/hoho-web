@@ -46,9 +46,6 @@ export default function JobCard({ job, onToggleSchedule }: Props) {
           🚌 총 {formatMinutes(commute.totalTimeMins)}, 환승 {commute.transfers ?? '-'}회
           {commute.walkToStationMins != null && ` · 도보 ${formatMinutes(commute.walkToStationMins)}`}
           <div style={{ fontSize: 12, color: '#6b6b70' }}>{commute.destination} 기준</div>
-          {commute.summaryGuidance && (
-            <div style={{ fontSize: 12, marginTop: 4 }}>{commute.summaryGuidance}</div>
-          )}
           {(() => {
             const oc = job.geocodedCoord;
             const dc = commute.destCoord;
