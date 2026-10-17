@@ -20,8 +20,8 @@ export default function JobCard({ job, onToggleSchedule }: Props) {
       </div>
       <div className="job-title">{post.title}</div>
       <div className="job-meta">
-        <span className="wage">{wage}</span>
-        <span>{schedule}</span>
+        <span className="mchip mchip-wage">₩ {wage}</span>
+        <span className="mchip mchip-schedule">🕐 {schedule}</span>
       </div>
       {commute && commute.totalTimeMins != null && (
         <div className="commute-box">

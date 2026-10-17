@@ -16,11 +16,6 @@ export function isPotentialCommuteArea(region: string | undefined | null): boole
   return !NON_CAPITAL_KEYWORDS.some((k) => region.includes(k));
 }
 
-export function normalizedRegion(r: string | undefined): string {
-  const t = (r ?? '').trim();
-  return t || '미정';
-}
-
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
 }
@@ -53,21 +48,78 @@ export function filterByBoards(jobs: MatchedJob[], s: Settings): MatchedJob[] {
   return jobs.filter((j) => boardEnabled(s, j.post.boardMid));
 }
 
-/** 지역 다중선택 필터 */
-export function filterByRegions(jobs: MatchedJob[], selected: Set<string>): MatchedJob[] {
-  if (selected.size === 0) return jobs;
-  return jobs.filter((j) => selected.has(normalizedRegion(j.post.region)));
+/** 지역 다중선택 필터 (2단계: 시도 → 시군구, Swift JobFeedViewModel 포팅)
+ *  selectedSidos가 비어 있으면 전체. 시도 선택 = 그 시도 전체,
+ *  시군구 선택이 있으면 그 중 하나에 속한 공고만. 시도별로 독립 판정. */
+export function filterByRegions(
+  jobs: MatchedJob[],
+  selectedSidos: Set<string>,
+  selectedSigungus: Set<string>,
+): MatchedJob[] {
+  if (selectedSidos.size === 0) return jobs;
+  return jobs.filter((j) => {
+    const p = splitRegion(j.post.region);
+    if (!selectedSidos.has(p.sido)) return false;
+    const prefix = p.sido + ' ';
+    const sub = [...selectedSigungus].filter((k) => k.startsWith(prefix));
+    if (sub.length === 0) return true;
+    const key = p.sigungu ? `${p.sido} ${p.sigungu}` : p.sido;
+    return sub.includes(key);
+  });
 }
 
-/** 전체 공고의 지역 목록 (중복 제거·정렬) */
-export function availableRegions(jobs: MatchedJob[]): string[] {
+/** 태그("경기 성남시 분당구 정자동")를 시도/시군구로 분리한다.
+ *  서버 Rust의 region_tag_from_address와 동일한 규칙 (시군구 2토큰 처리 포함). */
+export function splitRegion(region: string | undefined | null): { sido: string; sigungu: string | null } {
+  const r = (region ?? '').trim();
+  if (!r) return { sido: '미정', sigungu: null };
+  const toks = r.split(/\s+/);
+  if (toks.length < 2) return { sido: toks[0], sigungu: null };
+  const sido = toks[0];
+  if (toks.length >= 3 && toks[1].endsWith('시') && (toks[2].endsWith('구') || toks[2].endsWith('군'))) {
+    return { sido, sigungu: `${toks[1]} ${toks[2]}` };
+  }
+  return { sido, sigungu: toks[1] };
+}
+
+/** 시군구 선택 키 ("시도 시군구" — 서울 중구/인천 중구 구분용) */
+export function sigunguKey(sido: string, sigungu: string): string {
+  return `${sido} ${sigungu}`;
+}
+
+/** 전체 공고의 시도 목록 (1단계 칩 표시용, 중복 제거·정렬) */
+export function availableSidos(jobs: MatchedJob[]): string[] {
+  return [...new Set(jobs.map((j) => splitRegion(j.post.region).sido))].sort((a, b) =>
+    a.localeCompare(b, 'ko'),
+  );
+}
+
+/** 특정 시도의 시군구 목록 (2단계 칩 표시용, 중복 제거·정렬) */
+export function sigungusFor(jobs: MatchedJob[], sido: string): string[] {
   const set = new Set<string>();
-  for (const j of jobs) set.add(normalizedRegion(j.post.region));
+  for (const j of jobs) {
+    const p = splitRegion(j.post.region);
+    if (p.sido === sido && p.sigungu) set.add(p.sigungu);
+  }
   return [...set].sort((a, b) => a.localeCompare(b, 'ko'));
 }
 
-/** 사라진 지역 선택 정리 */
-export function pruneSelectedRegions(selected: Set<string>, available: string[]): Set<string> {
-  const avail = new Set(available);
-  return new Set([...selected].filter((r) => avail.has(r)));
+/** 사라진 지역 선택 정리 (시도·시군구 모두) */
+export function pruneSelectedRegions(
+  jobs: MatchedJob[],
+  sidos: Set<string>,
+  sigungus: Set<string>,
+): [Set<string>, Set<string>] {
+  const availSidos = new Set(availableSidos(jobs));
+  const nextSidos = new Set([...sidos].filter((s) => availSidos.has(s)));
+  const nextSigungus = new Set(
+    [...sigungus].filter((key) => {
+      const sp = key.indexOf(' ');
+      if (sp < 0) return false;
+      const sido = key.slice(0, sp);
+      if (!availSidos.has(sido)) return false;
+      return sigungusFor(jobs, sido).some((sg) => `${sido} ${sg}` === key);
+    }),
+  );
+  return [nextSidos, nextSigungus];
 }

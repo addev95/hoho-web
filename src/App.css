@@ -192,6 +192,33 @@ body {
   color: #fff;
   border-color: var(--text);
 }
+.chip-clear {
+  background: var(--bg);
+  font-weight: 600;
+}
+/* 2단계: 시군구 행 */
+.sigungu-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 16px;
+}
+.sigungu-label {
+  flex-shrink: 0;
+  min-width: 40px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+.sigungu-chips {
+  padding: 4px 0;
+  flex: 1;
+}
+.chip-sm {
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 12px;
+}
 
 /* ── 공고 카드 ── */
 .job-list {
@@ -231,6 +258,29 @@ body {
 .job-card .job-meta .wage {
   color: var(--text);
   font-weight: 600;
+}
+/* Swift keyMetricsRow 패리티: 지표 칩 */
+.mchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  line-height: 1.4;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mchip-wage {
+  background: rgba(255, 149, 0, 0.12);
+  color: #b26a00;
+}
+.mchip-schedule {
+  background: rgba(90, 200, 250, 0.14);
+  color: #0a7a8c;
 }
 .job-card .commute-box {
   background: #f0f9f0;

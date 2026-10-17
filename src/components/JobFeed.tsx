@@ -4,11 +4,12 @@ import type { MatchedJob } from '../lib/types';
 import type { Settings } from '../lib/store';
 import {
   applyCommuteFilter,
-  availableRegions,
+  availableSidos,
   filterByBoards,
   filterByRegions,
-  normalizedRegion,
   pruneSelectedRegions,
+  sigunguKey,
+  sigungusFor,
 } from '../lib/filters';
 import JobCard from './JobCard';
 
@@ -36,29 +37,60 @@ export default function JobFeed({
   onToggleBoard,
 }: Props) {
   const [filterOnlyCommute, setFilterOnlyCommute] = useState(true);
-  const [selectedRegions, setSelectedRegions] = useState<Set<string>>(new Set());
+  const [selectedSidos, setSelectedSidos] = useState<Set<string>>(new Set());
+  const [selectedSigungus, setSelectedSigungus] = useState<Set<string>>(new Set());
 
   const matchedJobs = useMemo(() => applyCommuteFilter(jobs, settings), [jobs, settings]);
-  const regions = useMemo(() => availableRegions(jobs), [jobs]);
+  const sidos = useMemo(() => availableSidos(jobs), [jobs]);
 
   // base list by tab
   const base = filterOnlyCommute ? matchedJobs : jobs;
   const byBoard = useMemo(() => filterByBoards(base, settings), [base, settings]);
-  const displayed = useMemo(() => filterByRegions(byBoard, selectedRegions), [byBoard, selectedRegions]);
+  const displayed = useMemo(
+    () => filterByRegions(byBoard, selectedSidos, selectedSigungus),
+    [byBoard, selectedSidos, selectedSigungus],
+  );
 
-  const toggleRegion = (r: string) => {
-    setSelectedRegions((prev) => {
-      const next = new Set(prev);
-      if (next.has(r)) next.delete(r);
-      else next.add(r);
-      return next;
-    });
+  const toggleSido = (sido: string) => {
+    if (selectedSidos.has(sido)) {
+      setSelectedSidos((prev) => {
+        const next = new Set(prev);
+        next.delete(sido);
+        return next;
+      });
+      // 해제 시 하위 시군구 선택도 함께 제거
+      setSelectedSigungus((prev) => new Set([...prev].filter((k) => !k.startsWith(sido + ' '))));
+    } else {
+      setSelectedSidos((prev) => new Set(prev).add(sido));
+    }
+  };
+
+  const toggleSigungu = (sido: string, sigungu: string) => {
+    const key = sigunguKey(sido, sigungu);
+    if (selectedSigungus.has(key)) {
+      setSelectedSigungus((prev) => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
+    } else {
+      setSelectedSigungus((prev) => new Set(prev).add(key));
+      if (!selectedSidos.has(sido)) {
+        setSelectedSidos((prev) => new Set(prev).add(sido));
+      }
+    }
+  };
+
+  const clearRegions = () => {
+    setSelectedSidos(new Set());
+    setSelectedSigungus(new Set());
   };
 
   // 지역 목록이 바뀌면 사라진 선택 정리
-  const pruned = pruneSelectedRegions(selectedRegions, regions);
-  if (pruned.size !== selectedRegions.size) {
-    setSelectedRegions(pruned);
+  const [prunedSidos, prunedSigungus] = pruneSelectedRegions(jobs, selectedSidos, selectedSigungus);
+  if (prunedSidos.size !== selectedSidos.size || prunedSigungus.size !== selectedSigungus.size) {
+    setSelectedSidos(prunedSidos);
+    setSelectedSigungus(prunedSigungus);
   }
 
   const activeMids = BOARD_MIDS.filter((mid) => {
@@ -102,10 +134,10 @@ export default function JobFeed({
 
       <div className="segment">
         <button className={filterOnlyCommute ? 'active' : ''} onClick={() => setFilterOnlyCommute(true)}>
-          통근 가능 ({filterByRegions(filterByBoards(matchedJobs, settings), selectedRegions).length})
+          통근 가능 ({filterByRegions(filterByBoards(matchedJobs, settings), selectedSidos, selectedSigungus).length})
         </button>
         <button className={!filterOnlyCommute ? 'active' : ''} onClick={() => setFilterOnlyCommute(false)}>
-          전체 공고 ({filterByRegions(filterByBoards(jobs, settings), selectedRegions).length})
+          전체 공고 ({filterByRegions(filterByBoards(jobs, settings), selectedSidos, selectedSigungus).length})
         </button>
       </div>
 
@@ -122,17 +154,51 @@ export default function JobFeed({
         ))}
       </div>
 
-      {regions.length > 0 && (
-        <div className="chip-row">
-          {regions.map((r) => (
-            <button
-              key={r}
-              className={`chip${selectedRegions.has(r) ? ' active' : ''}`}
-              onClick={() => toggleRegion(r)}
-            >
-              {r}
-            </button>
-          ))}
+      {sidos.length > 0 && (
+        <div>
+          {/* 1단계: 시도 */}
+          <div className="chip-row">
+            {sidos.map((sido) => (
+              <button
+                key={sido}
+                className={`chip${selectedSidos.has(sido) ? ' active' : ''}`}
+                onClick={() => toggleSido(sido)}
+              >
+                {sido}
+              </button>
+            ))}
+            {(selectedSidos.size > 0 || selectedSigungus.size > 0) && (
+              <button className="chip chip-clear" onClick={clearRegions}>
+                전체
+              </button>
+            )}
+          </div>
+          {/* 2단계: 선택된 시도의 시군구 */}
+          {[...selectedSidos]
+            .sort((a, b) => a.localeCompare(b, 'ko'))
+            .map((sido) => {
+              const list = sigungusFor(jobs, sido);
+              if (list.length === 0) return null;
+              return (
+                <div key={sido} className="sigungu-row">
+                  <span className="sigungu-label">{sido}</span>
+                  <div className="chip-row sigungu-chips">
+                    {list.map((sigungu) => {
+                      const key = sigunguKey(sido, sigungu);
+                      return (
+                        <button
+                          key={key}
+                          className={`chip chip-sm${selectedSigungus.has(key) ? ' active' : ''}`}
+                          onClick={() => toggleSigungu(sido, sigungu)}
+                        >
+                          {sigungu}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
         </div>
       )}
 
@@ -156,4 +222,3 @@ export default function JobFeed({
   );
 }
 
-export { normalizedRegion };
