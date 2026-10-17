@@ -137,6 +137,7 @@ function toCommuteEval(c: ServerCommute, destination: string): CommuteEvaluation
     totalWalkMins: c.total_walk_mins ?? undefined,
     summaryGuidance: c.summary_guidance ?? undefined,
     landingUrl: c.landing_url ?? undefined,
+    destCoord: c.dest_coord ?? undefined,
   };
 }
 

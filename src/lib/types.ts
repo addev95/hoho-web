@@ -36,6 +36,7 @@ export interface ServerCommute {
   summary_guidance?: string | null;
   landing_url?: string | null;
   origin_coord?: Coordinate | null;
+  dest_coord?: Coordinate | null;
   computed_at?: number | null;
 }
 
@@ -75,6 +76,7 @@ export interface CommuteEvaluation {
   totalWalkMins?: number;
   summaryGuidance?: string;
   landingUrl?: string;
+  destCoord?: Coordinate; // 목적지 좌표 (from/to 링크 조립용)
 }
 
 export interface TimetableSlot {

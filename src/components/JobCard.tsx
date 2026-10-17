@@ -49,16 +49,25 @@ export default function JobCard({ job, onToggleSchedule }: Props) {
           {commute.summaryGuidance && (
             <div style={{ fontSize: 12, marginTop: 4 }}>{commute.summaryGuidance}</div>
           )}
-          {commute.landingUrl && (
-            <a
-              href={commute.landingUrl}
-              target="_blank"
-              rel="noreferrer"
-              style={{ fontSize: 12, color: '#0066ff', display: 'inline-block', marginTop: 4 }}
-            >
-              카카오맵에서 길찾기 열기 ↗
-            </a>
-          )}
+          {(() => {
+            const oc = job.geocodedCoord;
+            const dc = commute.destCoord;
+            const fromName = extracted.studioName?.value?.trim() || post.region;
+            let mapUrl = commute.landingUrl;
+            if (oc && dc && fromName && commute.destination) {
+              mapUrl = `https://map.kakao.com/link/from/${encodeURIComponent(fromName)},${oc.y},${oc.x}/to/${encodeURIComponent(commute.destination)},${dc.y},${dc.x}`;
+            }
+            return mapUrl ? (
+              <a
+                href={mapUrl}
+                target="_blank"
+                rel="noreferrer"
+                style={{ fontSize: 12, color: '#0066ff', display: 'inline-block', marginTop: 4 }}
+              >
+                카카오맵에서 길찾기 열기 ↗
+              </a>
+            ) : null;
+          })()}
         </div>
       )}
       <div className="job-actions">
