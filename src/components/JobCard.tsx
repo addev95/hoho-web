@@ -53,18 +53,13 @@ export default function JobCard({ job, onToggleSchedule }: Props) {
             const oc = job.geocodedCoord;
             const dc = commute.destCoord;
             const fromName = extracted.studioName?.value?.trim() || post.region;
-            // by/traffic: 대중교통 탭 고정. from은 장소 ID 우선 (없으면 상호명+좌표)
+            // by/traffic: 대중교통 탭 고정. from은 상호명+좌표 (ID는 이름에 & 등이 있으면 깨짐)
             const toSeg = dc && commute.destination
               ? `${encodeURIComponent(commute.destination)},${dc.y},${dc.x}`
               : null;
             let mapUrl = commute.landingUrl;
-            if (toSeg) {
-              const fromSeg = job.kakaoPlaceId
-                ? job.kakaoPlaceId
-                : (oc && fromName ? `${encodeURIComponent(fromName)},${oc.y},${oc.x}` : null);
-              if (fromSeg) {
-                mapUrl = `https://map.kakao.com/link/by/traffic/${fromSeg}/${toSeg}`;
-              }
+            if (oc && fromName && toSeg) {
+              mapUrl = `https://map.kakao.com/link/by/traffic/${encodeURIComponent(fromName)},${oc.y},${oc.x}/${toSeg}`;
             }
             return mapUrl ? (
               <>
